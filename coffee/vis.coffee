@@ -221,9 +221,10 @@ Network = () ->
   network.clearStyle = () ->
     log("clearing")
     node.each (d) ->
+      if _.hasPath(d,'searched') then delete d.searched
       element = d3.select(this)
       element.style("fill", (d) -> nodeColors(d.artist))
-        .style("opacity", 1)
+        .style("opacity", 1.0)
         .style("stroke-width", 1.0)
   # Public function to update highlighted nodes
   # from search
@@ -238,19 +239,21 @@ Network = () ->
         match = d.name.toLowerCase().search(searchRegEx)
         match_artist = d.artist.toLowerCase().search(searchRegEx)
         if searchTerm.length > 0 and (match >= 0 or match_artist>=0)
+
+          if (!d.searched) then element.attr('r', (d) -> d.radius+2)
           isSearching = true
           element.style("fill", "#EE3333")
-            .style("stroke-width", 2.0)
+            .style("stroke-width", 1.0)
             .style("opacity", 1.0)
             .style("stroke", "#555")
           d.searched = true
         else
+          if (d.searched) then element.attr('r', (d) -> d.radius-2)
           d.searched = false
 
           element.style("fill", (d) -> nodeColors(d.artist))
             .style("opacity", .2)
             .style("stroke-width", 1.0)
-      log(isSearching)
       if !isSearching or (searchTerm and searchTerm.length <= 0)
         this.clearStyle()
 
