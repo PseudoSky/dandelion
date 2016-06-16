@@ -8,7 +8,7 @@ RadialPlacement = () ->
   # how much to separate each location by
   increment = 20
   # how large to make the layout
-  radius = 200
+  radius = 300
   # where the center of the layout should be
   center = {"x":0, "y":0}
   # what angle to start at
@@ -104,7 +104,7 @@ RadialPlacement = () ->
 Network = () ->
   # variables we want to access
   # in multiple places of Network
-  width = 960
+  width = 980
   height = 800
   # allData will store the unfiltered data
   allData = []
@@ -136,7 +136,7 @@ Network = () ->
   tooltip = Tooltip("vis-tooltip", 250)
 
   # charge used in artist layout
-  charge = (node) -> -Math.pow(node.radius, 2.0) / 2
+  charge = (node) -> -Math.pow(node.radius, 2.0) / 1.5
 
   # Starting point for network visualization
   # Initializes visualization and starts force layout
@@ -221,6 +221,7 @@ Network = () ->
   network.clearStyle = () ->
     log("clearing")
     node.each (d) ->
+
       if _.hasPath(d,'searched') then delete d.searched
       element = d3.select(this)
       element.style("fill", (d) -> nodeColors(d.artist))
@@ -270,7 +271,7 @@ Network = () ->
     log(data)
     # initialize circle radius scale
     countExtent = d3.extent(data.nodes, (d) -> d.playcount)
-    circleRadius = d3.scale.sqrt().range([3, 12]).domain(countExtent)
+    circleRadius = d3.scale.sqrt().range([5, 12]).domain(countExtent)
 
     data.nodes.forEach (n) ->
       # set initial x/y to values within the width/height
@@ -378,6 +379,12 @@ Network = () ->
     curNodes = mapNodes(curNodes)
     allLinks.filter (l) ->
       curNodes.get(l.source.id) and curNodes.get(l.target.id)
+  toggle_active = (d,i)->
+    console.log(nodes)
+    if d.active 
+      d.tog=false 
+    else
+      d.tog=true
 
   # enter/exit display for nodes
   updateNodes = () ->
@@ -395,6 +402,7 @@ Network = () ->
 
     node.on("mouseover", showDetails)
       .on("mouseout", hideDetails)
+    node.on("click", toggle_active)
 
     node.exit().remove()
 
@@ -419,7 +427,7 @@ Network = () ->
     if layout == "force"
       force.on("tick", forceTick)
         .charge(-200)
-        .linkDistance(50)
+        .linkDistance(120)
     else if layout == "radial"
       force.on("tick", radialTick)
         .charge(charge)
@@ -474,7 +482,7 @@ Network = () ->
 
   # Mouseover tooltip function
   showDetails = (d,i) ->
-
+    window.d = d
     content = '<h3 style="color:'+d3.rgb(nodeColors(d.artist)).darker()+';">Song Info</h3>'
     content += '<table style="width:100%;"><thead><td style="font-weight:bold;width:60%;"></td><td style="font-weight:bold;float:right;width:40%;"></td></thead><tbody style="width:100%;">'
     content += '<tr style="width:100%;"><td  style="float:left;"><p style="float:left;"><h4>Song</h4> ' + d.name + '</p></td>'
@@ -531,25 +539,28 @@ Network = () ->
     node.style("stroke", (n) ->
       if (n.searched or neighboring(d, n)) then "#555" else strokeFor(n))
       .style("stroke-width", (n) ->
-        if (n.searched or neighboring(d, n)) then 3.0 else 1.0)
+        if (n.searched or neighboring(d, n)) then 2.0 else 1.0)
       .style('opacity', (n) ->
         if (n.searched or neighboring(d, n) or n==d) then 1 else .2)
 
   
     # highlight the node being moused over
     d3.select(this).style("stroke","black")
-      .style("stroke-width", 2.0)
+      .style("stroke-width", 1.0)
 
   # Mouseout function
+  window.showDetails = showDetails
   hideDetails = (d,i) ->
-    tooltip.hideTooltip()
-    # watch out - don't mess with node if search is currently matching
-    node.style("stroke", (n) -> if !n.searched then strokeFor(n) else "#555")
-      .style("stroke-width", (n) -> if !n.searched then 1.0 else 2.0)
-      .style("opacity", (n) -> 1)
-    if link
-      link.attr("stroke", "#ddd")
-        .attr("stroke-opacity", 0.8)
+    console.log(d)
+    if (!d.tog)
+      tooltip.hideTooltip()
+      # watch out - don't mess with node if search is currently matching
+      node.style("stroke", (n) -> if !n.searched then strokeFor(n) else "#555")
+        .style("stroke-width", (n) -> if !n.searched then 1.0 else 2.0)
+        .style("opacity", (n) -> 1)
+      if link
+        link.attr("stroke", "#ddd")
+          .attr("stroke-opacity", 0.8)
 
   # Final act of Network() function is to return the inner 'network()' function.
   return network
@@ -559,9 +570,11 @@ activate = (group, link) ->
   d3.selectAll("##{group} a").classed("active", false)
   d3.select("##{group} ##{link}").classed("active", true)
 
+    
+
 $ ->
   myNetwork = Network()
-
+  window.network = myNetwork
   d3.selectAll("#layouts a").on "click", (d) ->
     newLayout = d3.select(this).attr("id")
     activate("layouts", newLayout)
@@ -580,6 +593,7 @@ $ ->
   $("#song_select").on "change", (e) ->
     songFile = $(this).val()
     d3.json "data/#{songFile}", (json) ->
+      window.data=json
       myNetwork.updateData(json)
   
   $("#search").keyup () ->
@@ -587,4 +601,5 @@ $ ->
     myNetwork.updateSearch(searchTerm)
 
   d3.json "data/call_me_al.json", (json) ->
+    window.data=json
     myNetwork("#vis", json)
