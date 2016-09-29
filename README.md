@@ -3,8 +3,20 @@ Interactive Song Similarity Network
 
 * Live Searching
 * Detailed Tooltip on Hover
-* Live Filtering 
-* Clear Intuitive Display 
+* Live Filtering
+* Clear Intuitive Display
+
+### Live Graph Search
+![Encrypt Facebook Message](https://raw.githubusercontent.com/PseudoSky/dandelion/master/images/search.gif)
+
+
+### Detailed Tooltip & Emphasized Selection
+![Encrypt Facebook Message](https://raw.githubusercontent.com/PseudoSky/dandelion/master/images/interaction.gif)
+
+
+### Interactive Sort, Cluster, and Filter
+![Encrypt Facebook Message](https://raw.githubusercontent.com/PseudoSky/dandelion/master/images/layout-change.gif)
+
 
 ## Running
 
